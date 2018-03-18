@@ -35,6 +35,6 @@ class PersonInfo extends Component {
 export default withTracker(() => {
     Meteor.subscribe('facts');
     return {
-      facts: Facts.find({}).fetch(),
+      facts: Facts.find({"ReferenceID":"PERS1"}).fetch(),
     };
 })(PersonInfo)
