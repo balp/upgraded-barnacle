@@ -1,1 +1,15 @@
 /* CSS declarations go here */
+.header {
+    color: plum;
+}
+
+.tableInfo {
+    color: plum;
+}
+
+.compactTable {
+    padding: 0;
+}
+td,th {
+    padding: 0;
+}
