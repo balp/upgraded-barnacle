@@ -1,6 +1,9 @@
 import {Meteor} from 'meteor/meteor';
 import {Facts} from "../imports/api/facts";
 import {Names} from "../imports/api/names";
+import {Persons} from "../imports/api/persons";
+import {Families} from "../imports/api/families";
+import {Children} from "../imports/api/children";
 
 InitData = [
     {name: "Fullständigt namn", date: "", text: "ARNHOLM, Per Anders Niklas"},
@@ -138,8 +141,92 @@ function toFact(fact) {
     }
     // console.error(_fact);
     return _fact;
+}
+
+function toPerson(person) {
+    // console.error(person);
+    let _person = {
+        ID: person['$']['ID'],
+        UserID: undefined,
+        BirthSex: undefined,
+        NoteID: [],
+        SourceID: [],
+        IsPrivate: undefined
+    };
+    if ('UserID' in person) {
+        _person.UserID = person['UserID'][0];
+    }
+    if ('BirthSex' in person) {
+        _person.BirthSex = person['BirthSex'][0];
+    }
+    if ('IsPrivate' in person) {
+        _person.IsPrivate = (person['IsPrivate'][0] === 'true');
+    }
+    return _person;
 
 }
+
+function toFamily(family) {
+    // console.error(person);
+    let _family = {
+        ID: family['$']['ID'],
+        UserID: undefined,
+        PrimeID: undefined,
+        PartnerID: undefined,
+        NoteID: [],
+        SourceID: [],
+    };
+    if ('UserID' in family) {
+        _family.UserID = family['UserID'][0];
+    }
+    if ('PrimeID' in family) {
+        _family.PrimeID = family['PrimeID'][0]['$']['ID'];
+    }
+    if ('PartnerID' in family) {
+        _family.PartnerID = family['PartnerID'][0]['$']['ID'];
+    }
+    return _family;
+
+}
+
+function toRelationship(relationship) {
+    // console.error(relationship);
+    let _relationship = {
+        ParentID: relationship['$']['ParentID'],
+        Type: relationship['$']['Type']
+    };
+    if ('Type' in relationship) {
+        _relationship.Type = relationship['Type'];
+    }
+    //console.error(_relationship);
+    return _relationship;
+}
+
+function toChild(child) {
+    // console.error(child);
+    let _child = {
+        ID: child['$']['ID'],
+        PersonID: child['PersonID'][0]['$']['ID'],
+        FamilyID: child['FamilyID'][0]['$']['ID'],
+        Parent1Relation: undefined,
+        Parent2Relation: undefined,
+        Ordinal: undefined,
+        NoteID: [],
+        SourceID: [],
+    };
+    if ('Parent1Relation' in child) {
+        _child.Parent1Relation = toRelationship(child['Parent1Relation'][0]['Relationship'][0]);
+    }
+    if ('Parent2Relation' in child) {
+        _child.Parent2Relation = toRelationship(child['Parent2Relation'][0]['Relationship'][0]);
+    }
+    if ('Ordinal' in child) {
+        _child.PartnerID = child['Ordinal'][0];
+    }
+    return _child;
+
+}
+
 
 
 Meteor.startup(() => {
@@ -178,19 +265,44 @@ Meteor.startup(() => {
 
                 }
                 if ('FamilyFacts' in scionpc) {
-                    console.log("FamilyFacts")
+                    console.log("FamilyFacts: ");
+                    //console.dir(scionpc['FamilyFacts']);
+                    let facts = scionpc['FamilyFacts'][0]['Fact'];
+                    //console.error(toFact(facts[0]))
+                    for (fact in facts) {
+                        let obj = toFact(facts[fact]);
+                        //console.error(obj);
+                        Facts.insert(obj);
+                    }
                 }
                 if ('People' in scionpc) {
-                    console.log("People")
+                    console.log("People: ")
+                    let persons = scionpc['People'][0]['Person'];
+                    // console.error(toPerson(persons[0]))
+                    for (person in persons) {
+                        let obj = toPerson(persons[person]);
+                        Persons.insert(obj);
+                    }
                 }
                 if ('Families' in scionpc) {
-                    console.log("Families")
+                    console.log("Families: ")
+                    let families = scionpc['Families'][0]['Family'];
+                    // console.error(toFamily(families[0]))
+                    for (family in families) {
+                        Families.insert(toFamily(families[family]))
+                    }
                 }
                 if ('Children' in scionpc) {
-                    console.log("Children")
+                    console.log("Children: ")
+                    let children = scionpc['Children'][0]['Child'];
+                    // console.error(toChild(children[0]))
+                    for (child in children) {
+                        Children.insert(toChild(children[child]))
+                    }
+
                 }
                 if ('Notes' in scionpc) {
-                    console.log("Notes")
+                    console.log("Notes:")
                 }
                 if ('Sources' in scionpc) {
                     console.log("Sources")
@@ -218,10 +330,10 @@ Meteor.startup(() => {
 
         });
     }
-
+    loadScionData();
     if (Facts.find().count() === 0) {
         console.info("Startup: have no data adding!!!");
-        loadScionData();
+
 
         //for (let fact in InitData) {
         //    Facts.insert(InitData[fact]);
