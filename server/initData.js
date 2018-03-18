@@ -4,23 +4,9 @@ import {Names} from "../imports/api/names";
 import {Persons} from "../imports/api/persons";
 import {Families} from "../imports/api/families";
 import {Children} from "../imports/api/children";
-
-InitData = [
-    {name: "Fullständigt namn", date: "", text: "ARNHOLM, Per Anders Niklas"},
-    {name: "Födelsekön", date: "", text: "Man"},
-    {name: "Född", date: "1972-09-20", text: "Mölndal"},
-    {name: "Utbildning", date: "", text: "Datavetenskap, Umeå Universitet"},
-    {name: "Sysselsättning", date: "", text: "IT-konsult"},
-    {name: "Boende", date: "1972", text: "Mölndal"},
-    {name: "Boende", date: "ca. 1972 - ca. 1975", text: "Kållered"},
-    {name: "Boende", date: "ca. 1975 - ca. 1980", text: "Källby, Björgårdsvägen 19G"},
-    {name: "Boende", date: "ca. 1980 - ca. 1984", text: "Staffanstorp, Strindbergs stig 1"},
-    {name: "Boende", date: "1984 - 1991", text: "Mölndal, Södermalmsgatan 13"},
-    {name: "Boende", date: "1991 - Est. 1993", text: "Umeå, Istidsgatan"},
-    {name: "Boende", date: "Est. 1993 - 1998", text: "Umeå, Kandidatvägen 7"},
-    {name: "Boende", date: "1998 - 7 Maj 2012", text: "Göteborg, Solstrålegatan"},
-    {name: "Boende", date: "2012-05-07", text: "Svanesund, Björkvägen 9"},
-];
+import {Notes} from "../imports/api/notes";
+import {Sources} from "../imports/api/source";
+import {Attachments} from "../imports/api/attachments";
 
 function toDateVal(dateVal) {
     // console.error(dateVal);
@@ -227,6 +213,69 @@ function toChild(child) {
 
 }
 
+function toNote(note) {
+    //console.error(note);
+    let _note = {
+        ID: note['$']['ID'],
+        Detail: undefined,
+        Date: undefined,
+    };
+    if ('Detail' in note) {
+        _note.Detail = note['Detail'][0];
+    }
+    if ('Date' in note) {
+        _note.Date = toDate(note['Date'][0]);
+    }
+    return _note;
+}
+
+function toSource(source) {
+    console.error(source);
+    let _source = {
+        ID: source['$']['ID'],
+        Detail: undefined,
+        SourceAuthor: undefined,
+        SourceTitle: undefined,
+        SourceLocation: undefined,
+        Date: undefined,
+        HolderID: []
+    };
+    if ('Detail' in source) {
+        _source.Detail = source['Detail'][0];
+    }
+    if ('SourceAuthor' in source) {
+        _source.SourceAuthor = source['SourceAuthor'][0];
+    }
+    if ('SourceTitle' in source) {
+        _source.SourceTitle = source['SourceTitle'][0];
+    }
+    if ('SourceLocation' in source) {
+        _source.SourceLocation = source['SourceLocation'][0];
+    }
+    if ('Date' in source) {
+        _source.Date = toDate(source['Date'][0]);
+    }
+    return _source;
+}
+
+function toAttachment(attachment) {
+    // console.error(attachment);
+    let _attachment = {
+        ID: attachment['$']['ID'],
+        ReferenceID: attachment['ReferenceID'][0]['$']['ID'],
+        Filename: attachment['Filename'][0],
+        Fileinfo: undefined,
+        Detail: undefined,
+        SourceID: [],
+    };
+    if ('Fileinfo' in attachment) {
+        _attachment.Fileinfo = attachment['Fileinfo'][0];
+    }
+    if ('Detail' in attachment) {
+        _attachment.Detail = attachment['Detail'][0];
+    }
+    return _attachment;
+}
 
 
 Meteor.startup(() => {
@@ -285,7 +334,7 @@ Meteor.startup(() => {
                     }
                 }
                 if ('Families' in scionpc) {
-                    console.log("Families: ")
+                    console.log("Families: ");
                     let families = scionpc['Families'][0]['Family'];
                     // console.error(toFamily(families[0]))
                     for (family in families) {
@@ -293,7 +342,7 @@ Meteor.startup(() => {
                     }
                 }
                 if ('Children' in scionpc) {
-                    console.log("Children: ")
+                    console.log("Children: ");
                     let children = scionpc['Children'][0]['Child'];
                     // console.error(toChild(children[0]))
                     for (child in children) {
@@ -303,15 +352,35 @@ Meteor.startup(() => {
                 }
                 if ('Notes' in scionpc) {
                     console.log("Notes:")
+                    let notes = scionpc['Notes'][0]['Note'];
+                    // console.error(toNote(notes[0]))
+                    for (note in notes) {
+                        Notes.insert(toNote(notes[note]));
+                    }
                 }
                 if ('Sources' in scionpc) {
-                    console.log("Sources")
+                    console.log("Sources:")
+                    let sources = scionpc['Sources'][0]['Source'];
+                    // console.error(toSource(sources[0]))
+                    for (source in sources) {
+                        Sources.insert(toSource(sources[source]))
+                    }
                 }
                 if ('PersonalAttachments' in scionpc) {
-                    console.log("PersonalAttachments")
+                    console.log("PersonalAttachments:")
+                    let attachments = scionpc['PersonalAttachments'][0]['Attachment']
+                    // console.error(toAttachment(attachments[0]))
+                    for (attachment in attachments) {
+                        Attachments.insert(toAttachment(attachments[attachment]))
+                    }
                 }
                 if ('FamilyAttachments' in scionpc) {
                     console.log("FamilyAttachments")
+                    let attachments = scionpc['FamilyAttachments'][0]['Attachment']
+                    // console.error(toAttachment(attachments[0]))
+                    for (attachment in attachments) {
+                        Attachments.insert(toAttachment(attachments[attachment]))
+                    }
                 }
                 if ('PersonalLDSEvents' in scionpc) {
                     console.log("PersonalLDSEvents")
@@ -330,14 +399,10 @@ Meteor.startup(() => {
 
         });
     }
-    loadScionData();
+
     if (Facts.find().count() === 0) {
         console.info("Startup: have no data adding!!!");
-
-
-        //for (let fact in InitData) {
-        //    Facts.insert(InitData[fact]);
-        //}
+        loadScionData();
     }
     console.info("Startup: (done) initData.js", Facts.find().count());
 });
