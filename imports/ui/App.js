@@ -135,13 +135,13 @@ class PersonInfo extends React.Component {
                     <h1 className="header">{this.getPersonName()}</h1>
             </header>
                 <div>
-                    <h2 className="header">Personliga Detaljer</h2>
+                    <h2 className="header">Personal Details</h2>
                     <table className="compactTable"><tbody>
                     {this.renderFacts()}
                     </tbody></table>
                 </div>
                 <div>
-                    <h2 className="header">Närmaste Familj</h2>
+                    <h2 className="header">Close Family</h2>
                     {this.renderCloseFamily()}
                 </div>
             </div>
