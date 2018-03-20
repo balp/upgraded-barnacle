@@ -21,3 +21,4 @@ fourseven:scss
 materialize:materialize
 react-meteor-data
 peerlibrary:xml2js
+aldeed:simple-schema

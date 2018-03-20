@@ -13,3 +13,22 @@
 td,th {
     padding: 0;
 }
+
+.family_date_note {
+    margin-left: 1em;
+    font-size: 80%;
+    color: darkkhaki;
+}
+
+.family_parents {
+    background-color: gold;
+}
+
+.family_self {
+    background-color: lightcyan;
+}
+
+.family_person {
+    font-size: 101%;
+    font-weight: 500;
+}
