@@ -81,7 +81,7 @@ class PersonInfo extends React.Component {
         if (this.props.factsExists) {
             let familyId = family.ID;
             let facts = this.props.facts.filter(fact => fact.ReferenceID === familyId);
-            console.log(facts);
+            // console.log(facts);
             return facts.map((fact) => (
                 <Fact key={fact._id} fact={fact}/>
             ));
@@ -89,12 +89,20 @@ class PersonInfo extends React.Component {
         }
         return(<tr><td>[Loading]</td></tr>);
     }
+    renderFamilyChilds(family) {
+        if (this.props.childsExists) {
+            let familyId = family.ID;
+            let children = this.props.childs.filter(child => child.FamilyID === familyId);
+            return children.map( child => (
+                <div key={child._id} className="col s11 offset-s1">{this.getName(child.PersonID)}</div>));
+        }
+    }
     renderFamilyInfo() {
         if (this.props.familiesExists ) {
             let personId = this.props.id;
             let families = this.props.families.filter(family => family.PrimeID === personId
                 || family.PartnerID === personId);
-            console.log(families);
+            // console.log(families);
             return families.map( family => (
                 <div key={family._id} className="col s11 offset-s1 self_partner">
                     <div className="col s12 family_self">
@@ -102,13 +110,12 @@ class PersonInfo extends React.Component {
                         <span>&nbsp;&&nbsp;</span>
                         <span className="family_person">{this.getName(family.PartnerID)}</span>
                     </div>
-                    <div className="col s11 offset-s1">
+                    <div className="col s10 offset-s2">
                         <table className="compactTable"><tbody>
                             {this.renderFamilyFacts(family)}
                         </tbody></table>
-
                     </div>
-
+                    {this.renderFamilyChilds(family)}
                 </div>
             ));
         }
