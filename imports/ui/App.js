@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withTracker } from 'meteor/react-meteor-data';
+import { Link } from 'react-router-dom';
 
 import { Facts } from '../api/facts.js'
 import { Names } from "../api/names";
@@ -48,7 +49,7 @@ class PersonInfo extends React.Component {
             let name = this.props.names.find(function (n) {
                 return n['PersonID'] === id;
             });
-            return(PersonInfo.formatName(name))
+            return(<Link to={`/person/${id}`}>{PersonInfo.formatName(name)}</Link>)
         }
         return("[Error]")
     }
