@@ -10,30 +10,27 @@ import {Children} from "../api/children";
 // PersonInfo component - represents the whole app
 class PersonInfo extends React.Component {
     getPersonName() {
-        let surname = '';
-        let given = '';
-        for (n in this.props.mynames) {
-            let name = this.props.mynames[n];
-            if ('Surname' in name) {
-                surname = name['Surname']
-            }
-            if ('Given' in name) {
-                given = name['Given']
-            }
-            if ('Familiar' in name) {
-                given = name['Familiar']
-            }
+        if (this.props.mynamesLoading) {
+            return("[Loading]")
         }
-        return (<span>
-            <span>{surname}</span>, <span>{given}</span>
-        </span>)
+        if (this.props.mynamesExists) {
+            let name = this.props.mynames[0];
+            console.log("getPersonName(): ", name);
+            return (PersonInfo.formatName(name))
+        }
+        return (<span>UNKNOWN {this.props.id}</span>)
     }
     renderFacts() {
-        return this.props.facts.map((fact) => (
-            <Fact key={fact._id} fact={fact} />
-        ));
+        if (this.props.factsLoading) {
+            return("[Loading]")
+        }
+        if (this.props.factsExists) {
+            return this.props.facts.map((fact) => (
+                <Fact key={fact._id} fact={fact}/>
+            ));
+        }
     }
-    formatName(name) {
+    static formatName(name) {
         console.log(name);
         let surname = !!name['Surname'] ? name['Surname'] : '';
         let given = !!name['Given'] ? name['Given'] : '';
@@ -50,13 +47,13 @@ class PersonInfo extends React.Component {
             let name = this.props.names.find(function (n) {
                 return n['PersonID'] === id;
             });
-            return(this.formatName(name))
+            return(PersonInfo.formatName(name))
         }
         return("[Error]")
     }
 
     renderParents() {
-        return this.props.childs.map((child) =>
+        return this.props.selfchilds.map((child) =>
         (<div key={child._id} className="col s12 family_parents">{console.log(child)}
             <span>Parents:&nbsp;</span>
             <span className="family_person">{this.getName(child.Parent1Relation.ParentID)}</span>
@@ -64,12 +61,25 @@ class PersonInfo extends React.Component {
             <span className="family_person">{this.getName(child.Parent2Relation.ParentID)}</span>
         </div>))
     }
+
+    renderSiblings() {
+        if (this.props.selfchildsExists && this.props.childsExists) {
+            let family = this.props.selfchilds.find(child => child.Parent1Relation.Type === "Biological");
+            let familyId = family.FamilyID;
+            let personId = this.props.id;
+            let siblings = this.props.childs.filter(child => child.FamilyID === familyId
+                && child.PersonID !== personId);
+            console.log(familyId, siblings);
+            return siblings.map( sibling => (
+                <div key={sibling._id} className="col s11 offset-s1 siblings">{this.getName(sibling.PersonID)}</div>
+            ))
+        }
+        return(<div className="col s11 offset-s1 siblings">[Loading]</div>)
+    }
     renderCloseFamily() {
         return(<div className="row">
             {this.renderParents()}
-            <div className="col s11 offset-s1 siblings">
-                <span className="family_person">ARNHOLM, Per Robert Fredrik</span>
-                <span className="family_date_note">[f: 1 Dec 1975]</span></div>
+            {this.renderSiblings()}
             <div className="col s11 offset-s1 self_partner">
                 <div className="row">
                     <div className="col s12 family_self">
@@ -110,6 +120,8 @@ class PersonInfo extends React.Component {
 }
 
 PersonInfo.propTypes = {
+    id: PropTypes.string,
+
     mynames: PropTypes.array,
     mynamesLoading: PropTypes.bool,
     mynamesExists: PropTypes.bool,
@@ -118,13 +130,19 @@ PersonInfo.propTypes = {
     factsLoading: PropTypes.bool,
     factsExists: PropTypes.bool,
 
-    childs: PropTypes.array,
-    childsLoading: PropTypes.bool,
-    childsExists: PropTypes.bool,
+    selfchilds: PropTypes.array,
+    selfchildsLoading: PropTypes.bool,
+    selfchildsExists: PropTypes.bool,
 
     names: PropTypes.array,
     namesLoading: PropTypes.bool,
     namesExists: PropTypes.bool,
+
+    childs: PropTypes.array,
+    childsLoading: PropTypes.bool,
+    childsExists: PropTypes.bool,
+
+
 };
 
 export default withTracker(({ id }) => {
@@ -135,31 +153,40 @@ export default withTracker(({ id }) => {
 
     const factsHandle = Meteor.subscribe('facts.person', id);
     const factsLoading = !factsHandle.ready();
-    const facts_person = Facts.find();
+    const facts_person = Facts.find({"ReferenceID": id});
     const factsExists = !factsLoading && !!facts_person;
 
-    const childsHandle = Meteor.subscribe('children.person', id);
-    const childsLoading = !childsHandle.ready();
-    const childs_person = Children.find();
-    const childsExists = !childsLoading && !!childs_person;
+    const selfchildsHandle = Meteor.subscribe('children.person', id);
+    const selfchildsLoading = !selfchildsHandle.ready();
+    const selfchilds_person = Children.find({"PersonID": id});
+    const selfchildsExists = !selfchildsLoading && !!selfchilds_person;
 
     const namesHandle = Meteor.subscribe('names', );
     const namesLoading = !namesHandle.ready();
     const names_person = Names.find();
     const namesExists = !namesLoading && !!names_person;
 
+    const childsHandle = Meteor.subscribe('children', id);
+    const childsLoading = !childsHandle.ready();
+    const childs_person = Children.find();
+    const childsExists = !childsLoading && !!childs_person;
+
     return {
+        id,
         mynames: mynames_person.fetch(),
         mynamesLoading: mynamesLoading,
         mynamesExists: mynamesExists,
         facts: facts_person.fetch(),
         factsLoading,
         factsExists,
+        selfchilds: selfchilds_person.fetch(),
+        selfchildsLoading,
+        selfchildsExists,
+        names: names_person.fetch(),
+        namesLoading,
+        namesExists,
         childs: childs_person.fetch(),
         childsLoading,
         childsExists,
-        names: names_person.fetch(),
-        namesLoading,
-        namesExists
     };
 })(PersonInfo)
